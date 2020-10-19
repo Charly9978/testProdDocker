@@ -1,0 +1,53 @@
+version: '3'
+services:
+  strapi:
+    build: .
+    image: test:V1
+    environment:
+      DATABASE_CLIENT: mongo
+      DATABASE_NAME: strapi
+      DATABASE_HOST: mongo
+      DATABASE_PORT: 27017
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: strapi
+    links:
+      - mongo:mongo
+    volumes:
+      - ./app:/srv/app
+    ports:
+      - '1337:1337'
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.strapi.middlewares=https-only-strapi"
+      - "traefik.http.middlewares.https-only-strapi.redirectscheme.scheme=https"
+      - "traefik.http.routers.strapi.rule=Host(`api.pdpbenj.site`)"
+      - "traefik.http.routers.starpi.entrypoints=web"
+      - "traefik.http.routers.strapi-secured.rule=Host(`api.pdpbenj.site`)"                                                                                                                                                                
+      - "traefik.http.routers.strapi-secured.entrypoints=websecure"
+      - "traefik.http.routers.strapi-secured.tls.certresolver=myhttpchallenge"
+      - "traefik.http.services.strapi.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik_webgateway"
+
+      networks:
+        - webgateway
+        - internal
+
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: strapi
+      MONGO_INITDB_ROOT_PASSWORD: strapi
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - '27017:27017'
+    restart: always
+    networks:
+      - internal
+
+networks:
+  webgateway:
+    external:
+      name: traefik_webgateway
+      internal:
