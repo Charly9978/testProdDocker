@@ -50,4 +50,4 @@ networks:
   webgateway:
     external:
       name: traefik_webgateway
-      internal:
+  internal:
